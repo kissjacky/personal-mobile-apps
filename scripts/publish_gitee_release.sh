@@ -37,13 +37,24 @@ release_json="$(
 release_id="$(printf '%s' "$release_json" | jq -r '.id // empty' 2>/dev/null || true)"
 
 if [[ -z "$release_id" ]]; then
+  release_payload="$(
+    jq -n \
+      --arg tagName "$TAG" \
+      --arg name "$RELEASE_NAME" \
+      --arg body "$RELEASE_BODY" \
+      --arg targetCommitish "main" \
+      '{
+        tagName: $tagName,
+        name: $name,
+        body: $body,
+        targetCommitish: $targetCommitish,
+        prerelease: false
+      }'
+  )"
   release_json="$(
-    curl -fsS -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases" \
-      --data-urlencode "access_token=$GITEE_ACCESS_TOKEN" \
-      --data-urlencode "tag_name=$TAG" \
-      --data-urlencode "name=$RELEASE_NAME" \
-      --data-urlencode "body=$RELEASE_BODY" \
-      --data-urlencode "prerelease=false"
+    curl -fsS -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases?access_token=$GITEE_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      --data "$release_payload"
   )"
   release_id="$(printf '%s' "$release_json" | jq -r '.id // empty')"
 fi
@@ -54,9 +65,24 @@ if [[ -z "$release_id" ]]; then
   exit 1
 fi
 
+asset_name="$(basename "$ASSET_PATH")"
+attachments_json="$(
+  curl -fsS --get \
+    --data-urlencode "access_token=$GITEE_ACCESS_TOKEN" \
+    "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases/$release_id/attach_files" 2>/dev/null || true
+)"
+
+if [[ -n "$attachments_json" ]]; then
+  printf '%s' "$attachments_json" |
+    jq -r --arg name "$asset_name" '.[]? | select(.name == $name) | .id' |
+    while IFS= read -r attach_id; do
+      [[ -n "$attach_id" ]] || continue
+      curl -fsS -X DELETE "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases/$release_id/attach_files/$attach_id?access_token=$GITEE_ACCESS_TOKEN" >/dev/null
+    done
+fi
+
 upload_json="$(
-  curl -fsS -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases/$release_id/attach_files" \
-    -F "access_token=$GITEE_ACCESS_TOKEN" \
+  curl -fsS -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases/$release_id/attach_files?access_token=$GITEE_ACCESS_TOKEN" \
     -F "file=@$ASSET_PATH"
 )"
 
