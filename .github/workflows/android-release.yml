@@ -107,3 +107,49 @@ jobs:
             --title "${APP_NAME} ${VERSION}" \
             --notes-file "$notes_file" \
             --verify-tag
+
+  sync-gitee-release:
+    runs-on: ubuntu-latest
+    needs: release
+    env:
+      GITEE_ACCESS_TOKEN: ${{ secrets.GITEE_ACCESS_TOKEN }}
+      GITEE_OWNER: ${{ secrets.GITEE_OWNER }}
+      GITEE_REPO: ${{ secrets.GITEE_REPO }}
+      GH_TOKEN: ${{ github.token }}
+      TAG_NAME: ${{ github.event.inputs.tag || github.ref_name }}
+      GITEE_RELEASE_BODY: "This release was synchronized from GitHub after the primary GitHub Release was published."
+
+    steps:
+      - name: Check Gitee release sync configuration
+        id: config
+        run: |
+          if [ -z "$GITEE_ACCESS_TOKEN" ] || [ -z "$GITEE_OWNER" ] || [ -z "$GITEE_REPO" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout scripts
+        if: steps.config.outputs.enabled == 'true'
+        uses: actions/checkout@v6
+
+      - name: Download GitHub Release assets
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          mkdir -p release-sync
+          gh release download "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --dir release-sync
+          test -n "$(find release-sync -maxdepth 1 -type f)"
+
+      - name: Upload assets to Gitee Release
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          for asset in release-sync/*; do
+            [ -f "$asset" ] || continue
+            if ! ./scripts/publish_gitee_release.sh "$TAG_NAME" "$asset" "$TAG_NAME"; then
+              echo "::warning::Gitee release asset sync failed for $asset. GitHub Release remains the source of truth."
+            fi
+          done
+
+      - name: Skip Gitee release sync
+        if: steps.config.outputs.enabled != 'true'
+        run: echo "Gitee release sync secrets are not configured; skipping."

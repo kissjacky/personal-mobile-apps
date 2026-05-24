@@ -84,8 +84,9 @@ The `android-release.yml` workflow will:
 
 1. Build a signed release APK.
 2. Upload the APK and SHA-256 checksum to GitHub Releases.
+3. Run a best-effort post-release Gitee asset sync when Gitee secrets are configured.
 
-After the GitHub Release is published, the `sync-gitee.yml` workflow will:
+The `sync-gitee.yml` workflow also keeps the Gitee code mirror updated and can be run manually to resync release assets:
 
 1. Mirror GitHub refs to Gitee.
 2. Download the GitHub Release assets.
