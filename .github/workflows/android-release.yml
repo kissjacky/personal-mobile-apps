@@ -1,0 +1,109 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - "metronome-v*"
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "App name under apps/"
+        required: true
+        default: "metronome"
+      tag:
+        description: "Existing git tag to publish"
+        required: true
+        default: "metronome-v1.0.11"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      APP_NAME: ${{ github.event.inputs.app || 'metronome' }}
+      ANDROID_COMPILE_SDK: "28"
+      ANDROID_MIN_SDK: "23"
+      ANDROID_TARGET_SDK: "28"
+      COMMON_UI_NAMESPACE: "com.personalapps.commonui"
+      METRONOME_NAMESPACE: "com.personalapps.metronome"
+      METRONOME_APPLICATION_ID: "com.personalapps.metronome"
+      METRONOME_VERSION_CODE: "12"
+      METRONOME_VERSION_NAME: "1.0.11"
+      METRONOME_APK_BASENAME: "metronome-android9"
+      ANDROID_SIGNING_STORE_FILE: release-signing-key.jks
+      ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+      ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+      ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" "platform-tools"
+
+      - name: Validate signing secrets
+        run: |
+          test -n "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}"
+          test -n "$ANDROID_SIGNING_STORE_PASSWORD"
+          test -n "$ANDROID_SIGNING_KEY_ALIAS"
+          test -n "$ANDROID_SIGNING_KEY_PASSWORD"
+
+      - name: Decode signing key
+        run: |
+          printf '%s' "${{ secrets.ANDROID_SIGNING_KEY_BASE64 }}" | base64 --decode > "$ANDROID_SIGNING_STORE_FILE"
+
+      - name: Build release APK
+        run: ./gradlew ":apps:${APP_NAME}:assembleRelease" --no-daemon
+
+      - name: Collect release assets
+        id: assets
+        run: |
+          mkdir -p release
+          apk_path="$(find "apps/${APP_NAME}/build/outputs/apk/release" -maxdepth 1 -type f -name '*release*.apk' ! -name '*unsigned*' | sort | tail -1)"
+          test -n "$apk_path"
+          version_var="$(printf '%s_VERSION_NAME' "$APP_NAME" | tr '[:lower:]-' '[:upper:]_')"
+          version_name="${!version_var}"
+          output_apk="release/${APP_NAME}-${version_name}.apk"
+          cp "$apk_path" "$output_apk"
+          sha256sum "$output_apk" > "$output_apk.sha256"
+          {
+            echo "apk=$output_apk"
+            echo "checksum=$output_apk.sha256"
+            echo "version=$version_name"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ env.RELEASE_TAG }}
+          APK: ${{ steps.assets.outputs.apk }}
+          CHECKSUM: ${{ steps.assets.outputs.checksum }}
+          VERSION: ${{ steps.assets.outputs.version }}
+        run: |
+          notes_file="release/${TAG_NAME}-notes.md"
+          {
+            echo "${APP_NAME} ${VERSION}"
+            echo
+            echo "- Android APK for direct installation."
+            echo "- SHA-256 checksum is attached next to the APK."
+          } > "$notes_file"
+          gh release create "$TAG_NAME" "$APK#${APP_NAME}-${VERSION}.apk" "$CHECKSUM#${APP_NAME}-${VERSION}.apk.sha256" \
+            --title "${APP_NAME} ${VERSION}" \
+            --notes-file "$notes_file" \
+            --verify-tag

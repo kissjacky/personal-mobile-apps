@@ -1,0 +1,111 @@
+name: Sync to Gitee
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional GitHub release tag to sync to Gitee"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  mirror-code:
+    runs-on: ubuntu-latest
+    env:
+      GITEE_OWNER: ${{ secrets.GITEE_OWNER }}
+      GITEE_REPO: ${{ secrets.GITEE_REPO }}
+      GITEE_SSH_PRIVATE_KEY: ${{ secrets.GITEE_SSH_PRIVATE_KEY }}
+
+    steps:
+      - name: Check mirror configuration
+        id: config
+        run: |
+          if [ -z "$GITEE_OWNER" ] || [ -z "$GITEE_REPO" ] || [ -z "$GITEE_SSH_PRIVATE_KEY" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.config.outputs.enabled == 'true'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Push to Gitee
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$GITEE_SSH_PRIVATE_KEY" > ~/.ssh/gitee
+          chmod 600 ~/.ssh/gitee
+          ssh-keyscan gitee.com >> ~/.ssh/known_hosts
+          git remote add gitee "git@gitee.com:${GITEE_OWNER}/${GITEE_REPO}.git"
+          if ! GIT_SSH_COMMAND="ssh -i ~/.ssh/gitee -o IdentitiesOnly=yes" git push --force gitee refs/heads/main:refs/heads/main; then
+            echo "::warning::Gitee code mirror failed. The primary GitHub repository is still published."
+            exit 0
+          fi
+          if ! GIT_SSH_COMMAND="ssh -i ~/.ssh/gitee -o IdentitiesOnly=yes" git push --force gitee --tags; then
+            echo "::warning::Gitee tag mirror failed. The primary GitHub repository is still published."
+          fi
+
+      - name: Skip mirror
+        if: steps.config.outputs.enabled != 'true'
+        run: echo "Gitee mirror secrets are not configured; skipping."
+
+  sync-release-assets:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '')
+    env:
+      GITEE_ACCESS_TOKEN: ${{ secrets.GITEE_ACCESS_TOKEN }}
+      GITEE_OWNER: ${{ secrets.GITEE_OWNER }}
+      GITEE_REPO: ${{ secrets.GITEE_REPO }}
+      GH_TOKEN: ${{ github.token }}
+      TAG_NAME: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+
+    steps:
+      - name: Check release sync configuration
+        id: config
+        run: |
+          if [ -z "$GITEE_ACCESS_TOKEN" ] || [ -z "$GITEE_OWNER" ] || [ -z "$GITEE_REPO" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout scripts
+        if: steps.config.outputs.enabled == 'true'
+        uses: actions/checkout@v6
+
+      - name: Download GitHub Release assets
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          mkdir -p release-sync
+          gh release download "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --dir release-sync
+          test -n "$(find release-sync -maxdepth 1 -type f)"
+
+      - name: Upload assets to Gitee Release
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          GITEE_RELEASE_BODY: "This release was synchronized from GitHub after the primary GitHub Release was published."
+        run: |
+          for asset in release-sync/*; do
+            [ -f "$asset" ] || continue
+            if ! ./scripts/publish_gitee_release.sh "$TAG_NAME" "$asset" "$TAG_NAME"; then
+              echo "::warning::Gitee release asset sync failed for $asset. GitHub Release remains the source of truth."
+            fi
+          done
+
+      - name: Skip release sync
+        if: steps.config.outputs.enabled != 'true'
+        run: echo "Gitee release sync secrets are not configured; skipping."

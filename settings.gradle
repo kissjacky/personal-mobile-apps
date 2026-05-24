@@ -1,0 +1,60 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+def readSettingsEnv = {
+    def values = [:]
+    def envFile = file(".env")
+    if (!envFile.exists()) {
+        return values
+    }
+    envFile.eachLine { rawLine ->
+        def line = rawLine.trim()
+        if (!line || line.startsWith("#")) {
+            return
+        }
+        if (line.startsWith("export ")) {
+            line = line.substring("export ".length()).trim()
+        }
+        def index = line.indexOf("=")
+        if (index <= 0) {
+            return
+        }
+        def key = line.substring(0, index).trim()
+        def value = line.substring(index + 1).trim()
+        if (!key.matches(/[A-Za-z_][A-Za-z0-9_]*/)) {
+            return
+        }
+        if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.substring(1, value.length() - 1)
+        }
+        values[key] = value
+    }
+    return values
+}
+
+def settingsEnv = readSettingsEnv()
+def settingsEnvValue = { String name, String defaultValue ->
+    def value = System.getenv(name)
+    if (value == null || value.toString().trim().isEmpty()) {
+        value = settingsEnv[name]
+    }
+    return value == null || value.toString().trim().isEmpty() ? defaultValue : value.toString()
+}
+
+rootProject.name = settingsEnvValue("PROJECT_GRADLE_NAME", "PersonalMobileApps")
+
+include ":packages:common-ui"
+include ":apps:metronome"

@@ -1,0 +1,20 @@
+plugins {
+    id "com.android.library"
+}
+
+def envValue = rootProject.ext.envValue
+def envInt = rootProject.ext.envInt
+
+android {
+    namespace envValue("COMMON_UI_NAMESPACE", "com.personalapps.commonui")
+    compileSdk envInt("ANDROID_COMPILE_SDK", 28)
+
+    defaultConfig {
+        minSdk envInt("ANDROID_MIN_SDK", 23)
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}

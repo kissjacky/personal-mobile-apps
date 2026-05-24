@@ -1,0 +1,11 @@
+Metronome audio sources
+
+Normal beat:
+metronome_14m_140,7bpm.flac by spt3125
+https://freesound.org/people/spt3125/sounds/24574/
+License: Creative Commons 0
+
+Accent:
+Metronome Ring Bell Plastic.wav by Fester993
+https://freesound.org/people/Fester993/sounds/563938/
+License: Creative Commons 0

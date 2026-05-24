@@ -1,0 +1,51 @@
+plugins {
+    id "com.android.application" version "8.6.1" apply false
+    id "com.android.library" version "8.6.1" apply false
+}
+
+def readDotenv = { File envFile ->
+    def values = [:]
+    if (!envFile.exists()) {
+        return values
+    }
+    envFile.eachLine { rawLine ->
+        def line = rawLine.trim()
+        if (!line || line.startsWith("#")) {
+            return
+        }
+        if (line.startsWith("export ")) {
+            line = line.substring("export ".length()).trim()
+        }
+        def index = line.indexOf("=")
+        if (index <= 0) {
+            return
+        }
+        def key = line.substring(0, index).trim()
+        def value = line.substring(index + 1).trim()
+        if (!key.matches(/[A-Za-z_][A-Za-z0-9_]*/)) {
+            return
+        }
+        if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.substring(1, value.length() - 1)
+        }
+        values[key] = value
+    }
+    return values
+}
+
+ext.dotenv = readDotenv(rootProject.file(".env"))
+ext.envValue = { String name, String defaultValue = "" ->
+    def value = System.getenv(name)
+    if (value == null || value.toString().trim().isEmpty()) {
+        value = rootProject.ext.dotenv[name]
+    }
+    return value == null || value.toString().trim().isEmpty() ? defaultValue : value.toString()
+}
+ext.envInt = { String name, int defaultValue ->
+    def raw = rootProject.ext.envValue(name, Integer.toString(defaultValue))
+    try {
+        return raw.toString().trim().toInteger()
+    } catch (ignored) {
+        throw new GradleException("Environment value ${name} must be an integer, got '${raw}'.")
+    }
+}

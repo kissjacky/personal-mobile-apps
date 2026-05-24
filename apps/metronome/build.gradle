@@ -1,0 +1,64 @@
+plugins {
+    id "com.android.application"
+}
+
+def envValue = rootProject.ext.envValue
+def envInt = rootProject.ext.envInt
+def appVersionName = envValue("METRONOME_VERSION_NAME", "1.0.11")
+def apkBaseName = envValue("METRONOME_APK_BASENAME", "metronome-android9")
+def signingStorePath = envValue("ANDROID_SIGNING_STORE_FILE", "")
+def signingStorePassword = envValue("ANDROID_SIGNING_STORE_PASSWORD", "")
+def signingKeyAlias = envValue("ANDROID_SIGNING_KEY_ALIAS", "")
+def signingKeyPassword = envValue("ANDROID_SIGNING_KEY_PASSWORD", "")
+def hasReleaseSigning = [
+        signingStorePath,
+        signingStorePassword,
+        signingKeyAlias,
+        signingKeyPassword
+].every { value -> value != null && value.toString().trim() }
+
+android {
+    namespace envValue("METRONOME_NAMESPACE", "com.personalapps.metronome")
+    compileSdk envInt("ANDROID_COMPILE_SDK", 28)
+
+    defaultConfig {
+        applicationId envValue("METRONOME_APPLICATION_ID", "com.personalapps.metronome")
+        minSdk envInt("ANDROID_MIN_SDK", 23)
+        targetSdk envInt("ANDROID_TARGET_SDK", 28)
+        versionCode envInt("METRONOME_VERSION_CODE", 12)
+        versionName appVersionName
+        setProperty("archivesBaseName", "${apkBaseName}-v${appVersionName}")
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(signingStorePath)
+                storePassword signingStorePassword
+                keyAlias signingKeyAlias
+                keyPassword signingKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    lint {
+        checkReleaseBuilds false
+    }
+}
+
+dependencies {
+    implementation project(":packages:common-ui")
+}
