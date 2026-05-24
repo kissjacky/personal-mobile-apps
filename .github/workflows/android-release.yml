@@ -103,10 +103,18 @@ jobs:
             echo "- Android APK for direct installation."
             echo "- SHA-256 checksum is attached next to the APK."
           } > "$notes_file"
-          gh release create "$TAG_NAME" "$APK#${APP_NAME}-${VERSION}.apk" "$CHECKSUM#${APP_NAME}-${VERSION}.apk.sha256" \
-            --title "${APP_NAME} ${VERSION}" \
-            --notes-file "$notes_file" \
-            --verify-tag
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release edit "$TAG_NAME" \
+              --title "${APP_NAME} ${VERSION}" \
+              --notes-file "$notes_file"
+            gh release upload "$TAG_NAME" "$APK#${APP_NAME}-${VERSION}.apk" "$CHECKSUM#${APP_NAME}-${VERSION}.apk.sha256" \
+              --clobber
+          else
+            gh release create "$TAG_NAME" "$APK#${APP_NAME}-${VERSION}.apk" "$CHECKSUM#${APP_NAME}-${VERSION}.apk.sha256" \
+              --title "${APP_NAME} ${VERSION}" \
+              --notes-file "$notes_file" \
+              --verify-tag
+          fi
 
   sync-gitee-release:
     runs-on: ubuntu-latest
