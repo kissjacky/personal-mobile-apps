@@ -55,25 +55,15 @@ release_json="$(
 release_id="$(printf '%s' "$release_json" | jq -r '.id // empty' 2>/dev/null || true)"
 
 if [[ -z "$release_id" ]]; then
-  release_payload="$(
-    jq -n \
-      --arg tagName "$TAG" \
-      --arg name "$RELEASE_NAME" \
-      --arg body "$RELEASE_BODY" \
-      --arg targetCommitish "main" \
-      '{
-        tagName: $tagName,
-        name: $name,
-        body: $body,
-        targetCommitish: $targetCommitish,
-        prerelease: false
-      }'
-  )"
   release_json="$(
     request_body "create release" \
-      -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases?access_token=$GITEE_ACCESS_TOKEN" \
-      -H "Content-Type: application/json" \
-      --data "$release_payload"
+      -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases" \
+      --data-urlencode "access_token=$GITEE_ACCESS_TOKEN" \
+      --data-urlencode "tag_name=$TAG" \
+      --data-urlencode "target_commitish=main" \
+      --data-urlencode "name=$RELEASE_NAME" \
+      --data-urlencode "body=$RELEASE_BODY" \
+      --data-urlencode "prerelease=false"
   )"
   release_id="$(printf '%s' "$release_json" | jq -r '.id // empty')"
 fi
