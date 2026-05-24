@@ -29,6 +29,24 @@ fi
 API_BASE="${GITEE_API_BASE:-https://gitee.com/api/v5}"
 RELEASE_BODY="${GITEE_RELEASE_BODY:-Android APK release for $TAG.}"
 
+request_body() {
+  local label="$1"
+  local output_file
+  local status
+  shift
+
+  output_file="$(mktemp)"
+  status="$(curl -sS -o "$output_file" -w "%{http_code}" "$@" || true)"
+  if [[ "$status" -lt 200 || "$status" -ge 300 ]]; then
+    echo "Gitee API $label failed with HTTP $status:" >&2
+    sed -e 's/access_token=[^"& ]*/access_token=***REDACTED***/g' "$output_file" >&2
+    rm -f "$output_file"
+    return 1
+  fi
+  cat "$output_file"
+  rm -f "$output_file"
+}
+
 release_json="$(
   curl -fsS --get \
     --data-urlencode "access_token=$GITEE_ACCESS_TOKEN" \
@@ -52,7 +70,8 @@ if [[ -z "$release_id" ]]; then
       }'
   )"
   release_json="$(
-    curl -fsS -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases?access_token=$GITEE_ACCESS_TOKEN" \
+    request_body "create release" \
+      -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases?access_token=$GITEE_ACCESS_TOKEN" \
       -H "Content-Type: application/json" \
       --data "$release_payload"
   )"
@@ -82,7 +101,8 @@ if [[ -n "$attachments_json" ]]; then
 fi
 
 upload_json="$(
-  curl -fsS -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases/$release_id/attach_files?access_token=$GITEE_ACCESS_TOKEN" \
+  request_body "upload release asset" \
+    -X POST "$API_BASE/repos/$GITEE_OWNER/$GITEE_REPO/releases/$release_id/attach_files?access_token=$GITEE_ACCESS_TOKEN" \
     -F "file=@$ASSET_PATH"
 )"
 
