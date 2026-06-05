@@ -15,6 +15,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -33,6 +34,8 @@ import com.personalapps.commonui.UiKit;
 public final class MetronomeActivity extends Activity {
     private static final int MIN_BPM = 30;
     private static final int MAX_BPM = 240;
+    private static final long TEMPO_REPEAT_INITIAL_DELAY_MS = 450L;
+    private static final long TEMPO_REPEAT_INTERVAL_MS = 180L;
     private static final String[] SIGNATURE_LABELS = {
             "2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"
     };
@@ -524,7 +527,7 @@ public final class MetronomeActivity extends Activity {
                     : currentSignature() + " · 第一拍重音");
         }
         if (statusText != null) {
-            statusText.setText(playing ? "息屏后会继续播放，音量跟随系统媒体音量。" : "默认 60 BPM，点击开始后第一拍声音更重。");
+            statusText.setText(playing ? "息屏后会继续播放，音量跟随系统媒体音量。" : "点击开始后第一拍声音更重。");
         }
     }
 
@@ -587,8 +590,42 @@ public final class MetronomeActivity extends Activity {
             clearTempoFocus();
             changeTempoBy(delta);
         });
-        UiKit.pressFeedback(button);
+        bindTempoRepeat(button, delta);
         return button;
+    }
+
+    private void bindTempoRepeat(TextView button, int delta) {
+        final boolean[] repeatStarted = {false};
+        final Runnable[] repeatTask = new Runnable[1];
+        repeatTask[0] = () -> {
+            repeatStarted[0] = true;
+            changeTempoBy(delta);
+            handler.postDelayed(repeatTask[0], TEMPO_REPEAT_INTERVAL_MS);
+        };
+        button.setOnTouchListener((view, event) -> {
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    clearTempoFocus();
+                    repeatStarted[0] = false;
+                    handler.removeCallbacks(repeatTask[0]);
+                    view.animate().scaleX(0.98f).scaleY(0.98f).setDuration(50).start();
+                    handler.postDelayed(repeatTask[0], TEMPO_REPEAT_INITIAL_DELAY_MS);
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    handler.removeCallbacks(repeatTask[0]);
+                    view.animate().scaleX(1f).scaleY(1f).setDuration(80).start();
+                    if (!repeatStarted[0]) {
+                        view.performClick();
+                    }
+                    return true;
+                case MotionEvent.ACTION_CANCEL:
+                    handler.removeCallbacks(repeatTask[0]);
+                    view.animate().scaleX(1f).scaleY(1f).setDuration(80).start();
+                    return true;
+                default:
+                    return true;
+            }
+        });
     }
 
     private TextView text(String value, float sp, int color, int style) {

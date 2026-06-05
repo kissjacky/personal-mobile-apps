@@ -1,5 +1,10 @@
 # Changelog
 
+## metronome 1.0.13
+
+- Added press-and-hold tempo adjustment for the BPM step buttons.
+- Simplified the beat status copy when playback is stopped.
+
 ## metronome 1.0.12
 
 - Added BPM step controls around the tempo input.
