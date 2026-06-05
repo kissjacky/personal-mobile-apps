@@ -21,6 +21,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -38,6 +39,18 @@ public final class MetronomeActivity extends Activity {
     private static final int[] SIGNATURE_BEATS = {
             2, 3, 4, 5, 6, 7, 9, 12
     };
+    private static final TempoMarking[] TEMPO_MARKINGS = {
+            new TempoMarking(45, "Grave", "庄板"),
+            new TempoMarking(60, "Largo", "广板"),
+            new TempoMarking(66, "Larghetto", "小广板"),
+            new TempoMarking(75, "Adagio", "柔板"),
+            new TempoMarking(107, "Andante", "行板"),
+            new TempoMarking(119, "Moderato", "中板"),
+            new TempoMarking(155, "Allegro", "快板"),
+            new TempoMarking(167, "Vivace", "活板"),
+            new TempoMarking(199, "Presto", "急板"),
+            new TempoMarking(MAX_BPM, "Prestissimo", "最急板")
+    };
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -52,6 +65,7 @@ public final class MetronomeActivity extends Activity {
     private boolean updatingBpmInput = false;
 
     private EditText bpmInput;
+    private TextView tempoMarkingText;
     private Spinner signatureSpinner;
     private TextView statusText;
     private TextView beatText;
@@ -133,11 +147,42 @@ public final class MetronomeActivity extends Activity {
 
     private LinearLayout buildTempoCard() {
         LinearLayout card = card();
-        card.addView(label("速度 BPM"));
+        FrameLayout header = new FrameLayout(this);
+        header.setPadding(0, 0, 0, dp(10));
+
+        TextView bpmLabel = text("速度 BPM", 13, Color.rgb(91, 104, 129), Typeface.BOLD);
+        FrameLayout.LayoutParams labelParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.START | Gravity.CENTER_VERTICAL
+        );
+        header.addView(bpmLabel, labelParams);
+
+        tempoMarkingText = text("", 13, Color.rgb(22, 101, 52), Typeface.BOLD);
+        tempoMarkingText.setGravity(Gravity.CENTER);
+        tempoMarkingText.setPadding(dp(10), dp(4), dp(10), dp(4));
+        tempoMarkingText.setBackground(bordered(Color.rgb(240, 253, 244), Color.rgb(187, 247, 208), 14));
+        FrameLayout.LayoutParams markingParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+        );
+        header.addView(tempoMarkingText, markingParams);
+
+        card.addView(header, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(36)
+        ));
 
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView decreaseButton = tempoAdjustButton("-", -1);
+        row.addView(decreaseButton, new LinearLayout.LayoutParams(
+                dp(56),
+                dp(84)
+        ));
 
         bpmInput = new EditText(this);
         bpmInput.setSingleLine(true);
@@ -147,6 +192,9 @@ public final class MetronomeActivity extends Activity {
         bpmInput.setTextSize(48);
         bpmInput.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         bpmInput.setGravity(Gravity.CENTER);
+        bpmInput.setMinHeight(0);
+        bpmInput.setMinimumHeight(0);
+        bpmInput.setPadding(0, 0, 0, 0);
         bpmInput.setSelectAllOnFocus(true);
         bpmInput.setTextColor(Color.rgb(20, 33, 61));
         bpmInput.setBackground(bordered(Color.WHITE, Color.rgb(203, 213, 225), 12));
@@ -177,9 +225,18 @@ public final class MetronomeActivity extends Activity {
                 applyTempoLive(editable.toString());
             }
         });
-        row.addView(bpmInput, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(86)
+        LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
+                0,
+                dp(84),
+                1f
+        );
+        inputParams.setMargins(dp(8), 0, dp(8), 0);
+        row.addView(bpmInput, inputParams);
+
+        TextView increaseButton = tempoAdjustButton("+", 1);
+        row.addView(increaseButton, new LinearLayout.LayoutParams(
+                dp(56),
+                dp(84)
         ));
         card.addView(row);
         return card;
@@ -287,8 +344,21 @@ public final class MetronomeActivity extends Activity {
             bpm = next;
             updateEngineSettings();
             savePreferences();
+            updateTempoMarking();
             updateBeatViews();
         }
+    }
+
+    private void changeTempoBy(int delta) {
+        int next = clampBpm(bpm + delta);
+        if (bpm == next) {
+            return;
+        }
+        bpm = next;
+        setBpmInputText(String.valueOf(bpm));
+        updateEngineSettings();
+        savePreferences();
+        updateAllViews();
     }
 
     private void startPlayback() {
@@ -402,7 +472,28 @@ public final class MetronomeActivity extends Activity {
             playButton.setText(playing ? "停止" : "开始");
             playButton.setBackground(rounded(playing ? Color.rgb(184, 51, 58) : Color.rgb(29, 127, 99), 14));
         }
+        updateTempoMarking();
         updateBeatViews();
+    }
+
+    private void updateTempoMarking() {
+        if (tempoMarkingText != null) {
+            tempoMarkingText.setText(tempoMarkingFor(bpm));
+        }
+    }
+
+    private String tempoMarkingFor(int value) {
+        int normalizedBpm = clampBpm(value);
+        for (TempoMarking marking : TEMPO_MARKINGS) {
+            if (normalizedBpm <= marking.maxBpm) {
+                return marking.label();
+            }
+        }
+        return TEMPO_MARKINGS[TEMPO_MARKINGS.length - 1].label();
+    }
+
+    private int clampBpm(int value) {
+        return Math.max(MIN_BPM, Math.min(MAX_BPM, value));
     }
 
     private void updateBeatViews() {
@@ -487,6 +578,19 @@ public final class MetronomeActivity extends Activity {
         return label;
     }
 
+    private TextView tempoAdjustButton(String value, int delta) {
+        TextView button = text(value, 30, Color.rgb(20, 33, 61), Typeface.BOLD);
+        button.setGravity(Gravity.CENTER);
+        button.setContentDescription(delta < 0 ? "降低速度" : "提高速度");
+        button.setBackground(bordered(Color.rgb(248, 250, 252), Color.rgb(203, 213, 225), 12));
+        button.setOnClickListener(view -> {
+            clearTempoFocus();
+            changeTempoBy(delta);
+        });
+        UiKit.pressFeedback(button);
+        return button;
+    }
+
     private TextView text(String value, float sp, int color, int style) {
         TextView textView = UiKit.text(this, value, sp, color, style);
         textView.setIncludeFontPadding(true);
@@ -522,5 +626,21 @@ public final class MetronomeActivity extends Activity {
 
     private int dp(float value) {
         return UiKit.dp(this, value);
+    }
+
+    private static final class TempoMarking {
+        private final int maxBpm;
+        private final String name;
+        private final String chineseName;
+
+        private TempoMarking(int maxBpm, String name, String chineseName) {
+            this.maxBpm = maxBpm;
+            this.name = name;
+            this.chineseName = chineseName;
+        }
+
+        private String label() {
+            return name + " · " + chineseName;
+        }
     }
 }
