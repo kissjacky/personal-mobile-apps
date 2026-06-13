@@ -1,5 +1,9 @@
 # Changelog
 
+## metronome 1.0.14
+
+- Softened the first-beat accent sample to reduce harsh high-frequency transients.
+
 ## metronome 1.0.13
 
 - Added press-and-hold tempo adjustment for the BPM step buttons.
