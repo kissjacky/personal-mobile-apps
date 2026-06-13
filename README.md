@@ -8,7 +8,7 @@ Personal Mobile Apps 是一个用 Web Coding / Code Agent 方式持续开发的�
 
 | App | 路径 | 包名 | 说明 |
 | --- | --- | --- | --- |
-| 钢琴节拍器 | `apps/metronome` | `com.personalapps.metronome` | Android 原生节拍器，支持 BPM 输入、拍号选择和第一拍重音。 |
+| 钢琴节拍器 | `apps/metronome` | `com.personalapps.metronome` | Android 原生节拍器，支持 BPM 输入、拍号选择、第一拍重音和应用内检查更新。 |
 
 共享 Android 代码放在 `packages/` 下。
 
@@ -89,7 +89,7 @@ dist/releases/
 推荐用 tag 触发 GitHub Actions 自动构建并创建 Release：
 
 ```bash
-git tag -a metronome-v1.0.15 -m "metronome 1.0.15"
+git tag -a metronome-v1.0.16 -m "metronome 1.0.16"
 git push origin main --tags
 ```
 

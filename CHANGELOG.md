@@ -1,5 +1,9 @@
 # Changelog
 
+## metronome 1.0.16
+
+- Added an in-app update check that opens the Gitee APK download when a newer version is available.
+
 ## metronome 1.0.15
 
 - Raised the first-beat accent between the 1.0.13 and 1.0.14 samples, keeping it clearer without restoring the sharp transient.

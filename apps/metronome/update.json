@@ -1,0 +1,11 @@
+{
+  "app": "metronome",
+  "versionCode": 17,
+  "versionName": "1.0.16",
+  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.16",
+  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.16/metronome-1.0.16.apk",
+  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.16/metronome-1.0.16.apk.sha256",
+  "notes": [
+    "新增应用内检查更新入口，发现新版后跳转 Gitee 下载 APK。"
+  ]
+}
