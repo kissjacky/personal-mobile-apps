@@ -19,6 +19,7 @@ import android.os.PowerManager;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -55,7 +56,7 @@ public final class MetronomeActivity extends Activity {
     private static final long TEMPO_REPEAT_INTERVAL_MS = 180L;
     private static final int UPDATE_TIMEOUT_MS = 8000;
     private static final String UPDATE_MANIFEST_URL =
-            "https://gitee.com/jackyyu/personal-mobile-apps/raw/main/apps/metronome/update.json";
+            "https://gitee.com/api/v5/repos/jackyyu/personal-mobile-apps/contents/apps/metronome/update.json?ref=main";
     private static final String[] SIGNATURE_LABELS = {
             "2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"
     };
@@ -517,12 +518,25 @@ public final class MetronomeActivity extends Activity {
                 throw new IllegalStateException("Unexpected update response: " + responseCode);
             }
             String body = readUtf8(connection.getInputStream());
-            return UpdateInfo.fromJson(new JSONObject(body));
+            return UpdateInfo.fromJson(extractUpdateManifest(new JSONObject(body)));
         } finally {
             if (connection != null) {
                 connection.disconnect();
             }
         }
+    }
+
+    private JSONObject extractUpdateManifest(JSONObject response) throws Exception {
+        String encodedContent = response.optString("content", "");
+        if (encodedContent.length() == 0) {
+            return response;
+        }
+        String encoding = response.optString("encoding", "");
+        if (!"base64".equalsIgnoreCase(encoding)) {
+            throw new IllegalArgumentException("Unsupported update manifest encoding");
+        }
+        byte[] decoded = Base64.decode(encodedContent, Base64.DEFAULT);
+        return new JSONObject(new String(decoded, StandardCharsets.UTF_8));
     }
 
     private String readUtf8(InputStream inputStream) throws Exception {

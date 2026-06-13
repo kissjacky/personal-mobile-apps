@@ -65,7 +65,7 @@ def main() -> int:
         fail("AndroidManifest.xml must declare INTERNET permission", failures)
 
     activity = ACTIVITY.read_text(encoding="utf-8")
-    expected_update_url = "https://gitee.com/jackyyu/personal-mobile-apps/raw/main/apps/metronome/update.json"
+    expected_update_url = "https://gitee.com/api/v5/repos/jackyyu/personal-mobile-apps/contents/apps/metronome/update.json?ref=main"
     if expected_update_url not in activity:
         fail("MetronomeActivity must fetch the stable Gitee update manifest URL", failures)
     for marker in ["checkForUpdate", "fetchUpdateInfo", "openUpdateUrl"]:

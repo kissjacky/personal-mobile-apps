@@ -1,5 +1,9 @@
 # Changelog
 
+## metronome 1.0.17
+
+- Switched the update checker to Gitee's contents API so the app does not depend on raw-file cache freshness.
+
 ## metronome 1.0.16
 
 - Added an in-app update check that opens the Gitee APK download when a newer version is available.
