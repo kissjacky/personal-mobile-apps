@@ -56,11 +56,19 @@ def main() -> int:
 
     if not 0.12 <= accent["duration"] <= 0.24:
         failures.append(f"accent duration out of range: {accent['duration']:.3f}s")
-    if not 0.45 <= accent["peak"] <= 0.82:
-        failures.append(f"accent peak should be controlled: {accent['peak']:.3f}")
-    if accent["attack_5ms"] > 0.60:
-        failures.append(f"accent attack is too sharp: {accent['attack_5ms']:.3f}")
-    if accent["zero_crossing_rate"] > normal["zero_crossing_rate"] * 2.5:
+    if not 0.86 <= accent["peak"] <= 0.93:
+        failures.append(f"accent peak should stay prominent: {accent['peak']:.3f}")
+    if not 0.069 <= accent["rms"] <= 0.080:
+        failures.append(f"accent body should be clearly audible: {accent['rms']:.3f}")
+    if not 0.40 <= accent["attack_5ms"] <= 0.62:
+        failures.append(f"accent attack should be present but rounded: {accent['attack_5ms']:.3f}")
+    if accent["zero_crossing_rate"] < normal["zero_crossing_rate"] * 3.0:
+        failures.append(
+            "accent brightness is too muted: "
+            f"{accent['zero_crossing_rate']:.1f}/s vs normal "
+            f"{normal['zero_crossing_rate']:.1f}/s"
+        )
+    if accent["zero_crossing_rate"] > normal["zero_crossing_rate"] * 4.1:
         failures.append(
             "accent high-frequency content is too strong: "
             f"{accent['zero_crossing_rate']:.1f}/s vs normal "
