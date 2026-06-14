@@ -64,16 +64,16 @@ public final class MetronomeActivity extends Activity {
             2, 3, 4, 5, 6, 7, 9, 12
     };
     private static final TempoMarking[] TEMPO_MARKINGS = {
-            new TempoMarking(45, "Grave", "庄板"),
-            new TempoMarking(60, "Largo", "广板"),
-            new TempoMarking(66, "Larghetto", "小广板"),
-            new TempoMarking(75, "Adagio", "柔板"),
-            new TempoMarking(107, "Andante", "行板"),
-            new TempoMarking(119, "Moderato", "中板"),
-            new TempoMarking(155, "Allegro", "快板"),
-            new TempoMarking(167, "Vivace", "活板"),
-            new TempoMarking(199, "Presto", "急板"),
-            new TempoMarking(MAX_BPM, "Prestissimo", "最急板")
+            new TempoMarking(45, 40, "Grave", "庄板"),
+            new TempoMarking(60, 50, "Largo", "广板"),
+            new TempoMarking(66, 63, "Larghetto", "小广板"),
+            new TempoMarking(76, 72, "Adagio", "柔板"),
+            new TempoMarking(108, 88, "Andante", "行板"),
+            new TempoMarking(120, 112, "Moderato", "中板"),
+            new TempoMarking(168, 132, "Allegro", "快板"),
+            new TempoMarking(176, 172, "Vivace", "活板"),
+            new TempoMarking(200, 184, "Presto", "急板"),
+            new TempoMarking(MAX_BPM, 208, "Prestissimo", "最急板")
     };
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -190,7 +190,13 @@ public final class MetronomeActivity extends Activity {
         tempoMarkingText = text("", 13, Color.rgb(22, 101, 52), Typeface.BOLD);
         tempoMarkingText.setGravity(Gravity.CENTER);
         tempoMarkingText.setPadding(dp(10), dp(4), dp(10), dp(4));
+        tempoMarkingText.setContentDescription("速度术语，点击切换下一档");
         tempoMarkingText.setBackground(bordered(Color.rgb(240, 253, 244), Color.rgb(187, 247, 208), 14));
+        tempoMarkingText.setOnClickListener(view -> {
+            clearTempoFocus();
+            cycleTempoMarking();
+        });
+        UiKit.pressFeedback(tempoMarkingText);
         FrameLayout.LayoutParams markingParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -404,13 +410,23 @@ public final class MetronomeActivity extends Activity {
 
     private void changeTempoBy(int delta) {
         int next = clampBpm(bpm + delta);
-        if (bpm == next) {
-            return;
+        setTempoBpm(next);
+    }
+
+    private void cycleTempoMarking() {
+        int currentIndex = tempoMarkingIndexFor(bpm);
+        int nextIndex = (currentIndex + 1) % TEMPO_MARKINGS.length;
+        setTempoBpm(TEMPO_MARKINGS[nextIndex].targetBpm);
+    }
+
+    private void setTempoBpm(int value) {
+        int next = clampBpm(value);
+        if (bpm != next) {
+            bpm = next;
+            updateEngineSettings();
+            savePreferences();
         }
-        bpm = next;
         setBpmInputText(String.valueOf(bpm));
-        updateEngineSettings();
-        savePreferences();
         updateAllViews();
     }
 
@@ -673,13 +689,18 @@ public final class MetronomeActivity extends Activity {
     }
 
     private String tempoMarkingFor(int value) {
+        return TEMPO_MARKINGS[tempoMarkingIndexFor(value)].label();
+    }
+
+    private int tempoMarkingIndexFor(int value) {
         int normalizedBpm = clampBpm(value);
-        for (TempoMarking marking : TEMPO_MARKINGS) {
+        for (int index = 0; index < TEMPO_MARKINGS.length; index++) {
+            TempoMarking marking = TEMPO_MARKINGS[index];
             if (normalizedBpm <= marking.maxBpm) {
-                return marking.label();
+                return index;
             }
         }
-        return TEMPO_MARKINGS[TEMPO_MARKINGS.length - 1].label();
+        return TEMPO_MARKINGS.length - 1;
     }
 
     private int clampBpm(int value) {
@@ -854,11 +875,13 @@ public final class MetronomeActivity extends Activity {
 
     private static final class TempoMarking {
         private final int maxBpm;
+        private final int targetBpm;
         private final String name;
         private final String chineseName;
 
-        private TempoMarking(int maxBpm, String name, String chineseName) {
+        private TempoMarking(int maxBpm, int targetBpm, String name, String chineseName) {
             this.maxBpm = maxBpm;
+            this.targetBpm = targetBpm;
             this.name = name;
             this.chineseName = chineseName;
         }

@@ -1,11 +1,12 @@
 {
   "app": "metronome",
-  "versionCode": 18,
-  "versionName": "1.0.17",
-  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.17",
-  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.17/metronome-1.0.17.apk",
-  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.17/metronome-1.0.17.apk.sha256",
+  "versionCode": 19,
+  "versionName": "1.0.18",
+  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.18",
+  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.18/metronome-1.0.18.apk",
+  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.18/metronome-1.0.18.apk.sha256",
   "notes": [
-    "新增应用内检查更新入口，发现新版后跳转 Gitee 下载 APK。"
+    "速度术语标签支持点击循环切换，并自动设置对应 BPM。",
+    "速度术语档位调整为更贴近传统钢琴节拍器的范围。"
   ]
 }

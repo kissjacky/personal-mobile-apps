@@ -1,5 +1,9 @@
 # Changelog
 
+## metronome 1.0.18
+
+- Added tap-to-cycle behavior for the tempo marking label, using standard piano/metronome ranges and representative BPM targets.
+
 ## metronome 1.0.17
 
 - Switched the update checker to Gitee's contents API so the app does not depend on raw-file cache freshness.

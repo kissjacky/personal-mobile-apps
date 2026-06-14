@@ -76,7 +76,7 @@ Paste that value into `ANDROID_SIGNING_KEY_BASE64`.
 Update `.env.example`, `CHANGELOG.md`, and the app version in `.env` locally. Commit the source change, then tag:
 
 ```bash
-git tag -a metronome-v1.0.17 -m "metronome 1.0.17"
+git tag -a metronome-v1.0.18 -m "metronome 1.0.18"
 git push origin main --tags
 ```
 
@@ -110,5 +110,5 @@ Gitee is only a post-publish mirror. Use these only as fallbacks if the workflow
 
 ```bash
 ./scripts/mirror_to_gitee.sh
-./scripts/publish_gitee_release.sh metronome-v1.0.17 dist/releases/metronome-v1.0.17.apk
+./scripts/publish_gitee_release.sh metronome-v1.0.18 dist/releases/metronome-v1.0.18.apk
 ```
