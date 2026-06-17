@@ -58,10 +58,10 @@ public final class MetronomeActivity extends Activity {
     private static final String UPDATE_MANIFEST_URL =
             "https://gitee.com/api/v5/repos/jackyyu/personal-mobile-apps/contents/apps/metronome/update.json?ref=main";
     private static final String[] SIGNATURE_LABELS = {
-            "2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"
+            "2/4", "3/4", "4/4", "2/2", "3/8", "6/8"
     };
     private static final int[] SIGNATURE_BEATS = {
-            2, 3, 4, 5, 6, 7, 9, 12
+            2, 3, 4, 2, 3, 6
     };
     private static final TempoMarking[] TEMPO_MARKINGS = {
             new TempoMarking(45, 40, "Grave", "庄板"),

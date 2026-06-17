@@ -4,7 +4,7 @@ plugins {
 
 def envValue = rootProject.ext.envValue
 def envInt = rootProject.ext.envInt
-def appVersionName = envValue("METRONOME_VERSION_NAME", "1.0.18")
+def appVersionName = envValue("METRONOME_VERSION_NAME", "1.0.19")
 def apkBaseName = envValue("METRONOME_APK_BASENAME", "metronome-android9")
 def signingStorePath = envValue("ANDROID_SIGNING_STORE_FILE", "")
 def signingStorePassword = envValue("ANDROID_SIGNING_STORE_PASSWORD", "")
@@ -25,7 +25,7 @@ android {
         applicationId envValue("METRONOME_APPLICATION_ID", "com.personalapps.metronome")
         minSdk envInt("ANDROID_MIN_SDK", 23)
         targetSdk envInt("ANDROID_TARGET_SDK", 28)
-        versionCode envInt("METRONOME_VERSION_CODE", 19)
+        versionCode envInt("METRONOME_VERSION_CODE", 20)
         versionName appVersionName
         setProperty("archivesBaseName", "${apkBaseName}-v${appVersionName}")
     }

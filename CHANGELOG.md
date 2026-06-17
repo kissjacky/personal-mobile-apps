@@ -1,5 +1,9 @@
 # Changelog
 
+## metronome 1.0.19
+
+- Refined the default time-signature list for piano practice: 2/4, 3/4, 4/4, 2/2, 3/8, and 6/8.
+
 ## metronome 1.0.18
 
 - Added tap-to-cycle behavior for the tempo marking label, using standard piano/metronome ranges and representative BPM targets.
