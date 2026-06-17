@@ -1,5 +1,9 @@
 # Changelog
 
+## metronome 1.0.20
+
+- Updated the default time-signature order to 2/2, 2/4, 3/4, 4/4, 3/8, 6/8, and 12/8, with 4/4 as the default.
+
 ## metronome 1.0.19
 
 - Refined the default time-signature list for piano practice: 2/4, 3/4, 4/4, 2/2, 3/8, and 6/8.

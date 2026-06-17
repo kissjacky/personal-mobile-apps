@@ -1,12 +1,12 @@
 {
   "app": "metronome",
-  "versionCode": 20,
-  "versionName": "1.0.19",
-  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.19",
-  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.19/metronome-1.0.19.apk",
-  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.19/metronome-1.0.19.apk.sha256",
+  "versionCode": 21,
+  "versionName": "1.0.20",
+  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.20",
+  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.20/metronome-1.0.20.apk",
+  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.20/metronome-1.0.20.apk.sha256",
   "notes": [
-    "拍号选项调整为更适合钢琴日常练习的常用拍号。",
-    "移除默认列表中的不规则和偏高级拍号，补充 2/2 与 3/8。"
+    "拍号选项调整为 2/2、2/4、3/4、4/4、3/8、6/8、12/8。",
+    "4/4 明确作为默认拍号，并兼容迁移旧版已保存的拍号选择。"
   ]
 }

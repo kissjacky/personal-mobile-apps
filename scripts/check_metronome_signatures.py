@@ -11,10 +11,10 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACTIVITY = ROOT / "apps" / "metronome" / "src" / "main" / "java" / "com" / "personalapps" / "metronome" / "MetronomeActivity.java"
 
-EXPECTED_LABELS = ["2/4", "3/4", "4/4", "2/2", "3/8", "6/8"]
-EXPECTED_BEATS = [2, 3, 4, 2, 3, 6]
+EXPECTED_LABELS = ["2/2", "2/4", "3/4", "4/4", "3/8", "6/8", "12/8"]
+EXPECTED_BEATS = [2, 2, 3, 4, 3, 6, 12]
+EXPECTED_DEFAULT_INDEX = 3
 IRREGULAR_DEFAULTS = {"5/4", "7/8"}
-ADVANCED_COMPOUND_DEFAULTS = {"9/8", "12/8"}
 
 
 def extract_string_array(source: str, name: str) -> list[str]:
@@ -42,11 +42,15 @@ def main() -> int:
         failures.append(f"SIGNATURE_LABELS must be {EXPECTED_LABELS}, got {labels}")
     if beats != EXPECTED_BEATS:
         failures.append(f"SIGNATURE_BEATS must be {EXPECTED_BEATS}, got {beats}")
-    blocked = sorted((IRREGULAR_DEFAULTS | ADVANCED_COMPOUND_DEFAULTS).intersection(labels))
+    blocked = sorted(IRREGULAR_DEFAULTS.intersection(labels))
     if blocked:
         failures.append(f"default signatures should not include {blocked}")
     if len(labels) != len(beats):
         failures.append("SIGNATURE_LABELS and SIGNATURE_BEATS must have the same length")
+    if f"DEFAULT_SIGNATURE_INDEX = {EXPECTED_DEFAULT_INDEX};" not in source:
+        failures.append(f"DEFAULT_SIGNATURE_INDEX must be {EXPECTED_DEFAULT_INDEX} for 4/4")
+    if "migrateLegacySignatureIndex" not in source:
+        failures.append("MetronomeActivity must migrate persisted legacy signature indices")
 
     if failures:
         print("Signature check failed:")

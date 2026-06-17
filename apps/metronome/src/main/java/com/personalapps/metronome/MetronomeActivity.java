@@ -57,11 +57,15 @@ public final class MetronomeActivity extends Activity {
     private static final int UPDATE_TIMEOUT_MS = 8000;
     private static final String UPDATE_MANIFEST_URL =
             "https://gitee.com/api/v5/repos/jackyyu/personal-mobile-apps/contents/apps/metronome/update.json?ref=main";
+    private static final String PREF_SIGNATURE_INDEX = "signatureIndex";
+    private static final String PREF_SIGNATURE_VERSION = "signatureVersion";
+    private static final int SIGNATURE_PREF_VERSION = 2;
+    private static final int DEFAULT_SIGNATURE_INDEX = 3;
     private static final String[] SIGNATURE_LABELS = {
-            "2/4", "3/4", "4/4", "2/2", "3/8", "6/8"
+            "2/2", "2/4", "3/4", "4/4", "3/8", "6/8", "12/8"
     };
     private static final int[] SIGNATURE_BEATS = {
-            2, 3, 4, 2, 3, 6
+            2, 2, 3, 4, 3, 6, 12
     };
     private static final TempoMarking[] TEMPO_MARKINGS = {
             new TempoMarking(45, 40, "Grave", "庄板"),
@@ -83,7 +87,7 @@ public final class MetronomeActivity extends Activity {
     private PowerManager.WakeLock playbackWakeLock;
 
     private int bpm = 60;
-    private int signatureIndex = 2;
+    private int signatureIndex = DEFAULT_SIGNATURE_INDEX;
     private int currentBeat = -1;
     private boolean playing = false;
     private boolean updatingBpmInput = false;
@@ -753,16 +757,54 @@ public final class MetronomeActivity extends Activity {
 
     private void loadPreferences() {
         bpm = preferences.getInt("bpm", 60);
-        signatureIndex = preferences.getInt("signatureIndex", 2);
+        boolean hasStoredSignature = preferences.contains(PREF_SIGNATURE_INDEX);
+        int storedSignatureVersion = preferences.getInt(PREF_SIGNATURE_VERSION, 1);
+        int storedSignatureIndex = preferences.getInt(PREF_SIGNATURE_INDEX, DEFAULT_SIGNATURE_INDEX);
+        if (hasStoredSignature && storedSignatureVersion < SIGNATURE_PREF_VERSION) {
+            signatureIndex = migrateLegacySignatureIndex(storedSignatureIndex);
+        } else if (hasStoredSignature) {
+            signatureIndex = storedSignatureIndex;
+        } else {
+            signatureIndex = DEFAULT_SIGNATURE_INDEX;
+        }
         if (signatureIndex < 0 || signatureIndex >= SIGNATURE_LABELS.length) {
-            signatureIndex = 2;
+            signatureIndex = DEFAULT_SIGNATURE_INDEX;
+        }
+        if (storedSignatureVersion < SIGNATURE_PREF_VERSION) {
+            preferences.edit()
+                    .putInt(PREF_SIGNATURE_INDEX, signatureIndex)
+                    .putInt(PREF_SIGNATURE_VERSION, SIGNATURE_PREF_VERSION)
+                    .apply();
+        }
+    }
+
+    private int migrateLegacySignatureIndex(int legacyIndex) {
+        switch (legacyIndex) {
+            case 0:
+                return 1; // 2/4
+            case 1:
+                return 2; // 3/4
+            case 2:
+                return 3; // 4/4
+            case 3:
+                return 0; // 2/2 in the previous default list
+            case 4:
+                return 4; // 3/8
+            case 5:
+                return 5; // 6/8
+            case 6:
+            case 7:
+                return 6; // older compound signatures land on 12/8
+            default:
+                return DEFAULT_SIGNATURE_INDEX;
         }
     }
 
     private void savePreferences() {
         preferences.edit()
                 .putInt("bpm", bpm)
-                .putInt("signatureIndex", signatureIndex)
+                .putInt(PREF_SIGNATURE_INDEX, signatureIndex)
+                .putInt(PREF_SIGNATURE_VERSION, SIGNATURE_PREF_VERSION)
                 .apply();
     }
 
