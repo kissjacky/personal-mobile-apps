@@ -3,7 +3,7 @@ package com.personalapps.metronome;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
-public final class MetronomeEngine {
+public final class MetronomeEngine implements MetronomePlaybackSession.Clock {
     public interface Listener {
         void onBeat(int beatIndex);
     }
@@ -31,10 +31,12 @@ public final class MetronomeEngine {
         settingsRef = new AtomicReference<>(initialSettings);
     }
 
+    @Override
     public void setListener(Listener listener) {
         this.listener = listener;
     }
 
+    @Override
     public synchronized void start(Settings settings) {
         stop();
         settingsRef.set(settings);
@@ -44,6 +46,7 @@ public final class MetronomeEngine {
         clockThread.start();
     }
 
+    @Override
     public synchronized void stop() {
         running = false;
         Thread thread = clockThread;
@@ -60,10 +63,12 @@ public final class MetronomeEngine {
         }
     }
 
+    @Override
     public void update(Settings settings) {
         settingsRef.set(settings);
     }
 
+    @Override
     public void release() {
         stop();
         clickSoundPool.release();

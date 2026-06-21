@@ -1,12 +1,12 @@
 {
   "app": "metronome",
-  "versionCode": 21,
-  "versionName": "1.0.20",
-  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.20",
-  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.20/metronome-1.0.20.apk",
-  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.20/metronome-1.0.20.apk.sha256",
+  "versionCode": 22,
+  "versionName": "1.0.21",
+  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.21",
+  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.21/metronome-1.0.21.apk",
+  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.21/metronome-1.0.21.apk.sha256",
   "notes": [
-    "拍号选项调整为 2/2、2/4、3/4、4/4、3/8、6/8、12/8。",
-    "4/4 明确作为默认拍号，并兼容迁移旧版已保存的拍号选择。"
+    "播放改为前台服务，息屏后仍保持节拍器出声。",
+    "播放期间由服务持有 wakelock，减少系统省电调度导致的停声。"
   ]
 }

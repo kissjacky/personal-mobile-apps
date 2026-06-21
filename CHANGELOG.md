@@ -1,5 +1,10 @@
 # Changelog
 
+## metronome 1.0.21
+
+- Moved metronome playback into a foreground service so audio keeps running after the screen turns off.
+- Kept the playback wakelock inside the service lifecycle and added coverage for start, update, stop, and release behavior.
+
 ## metronome 1.0.20
 
 - Updated the default time-signature order to 2/2, 2/4, 3/4, 4/4, 3/8, 6/8, and 12/8, with 4/4 as the default.
