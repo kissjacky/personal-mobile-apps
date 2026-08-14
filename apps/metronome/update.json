@@ -1,12 +1,12 @@
 {
   "app": "metronome",
-  "versionCode": 22,
-  "versionName": "1.0.21",
-  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.21",
-  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.21/metronome-1.0.21.apk",
-  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.21/metronome-1.0.21.apk.sha256",
+  "versionCode": 23,
+  "versionName": "1.0.22",
+  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.22",
+  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.22/metronome-1.0.22.apk",
+  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.22/metronome-1.0.22.apk.sha256",
   "notes": [
-    "播放改为前台服务，息屏后仍保持节拍器出声。",
-    "播放期间由服务持有 wakelock，减少系统省电调度导致的停声。"
+    "意大利速度术语统一采用 Wittner 官方参考表，并在界面显示参考范围。",
+    "点击速度术语会跳转到对应档位的代表 BPM；超出 40–208 时不再强行套用术语。"
   ]
 }

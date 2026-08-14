@@ -1,5 +1,10 @@
 # Changelog
 
+## metronome 1.0.22
+
+- Aligned Italian tempo labels and ranges with the Wittner reference table, and made each tap target consistent with its displayed range.
+- Marked BPM values outside 40–208 as outside the common terminology reference instead of assigning unsupported Italian labels.
+
 ## metronome 1.0.21
 
 - Moved metronome playback into a foreground service so audio keeps running after the screen turns off.

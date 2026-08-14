@@ -89,7 +89,7 @@ dist/releases/
 推荐用 tag 触发 GitHub Actions 自动构建并创建 Release：
 
 ```bash
-git tag -a metronome-v1.0.21 -m "metronome 1.0.21"
+git tag -a metronome-v1.0.22 -m "metronome 1.0.22"
 git push origin main --tags
 ```
 
