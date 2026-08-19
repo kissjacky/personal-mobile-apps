@@ -1,12 +1,12 @@
 {
   "app": "metronome",
-  "versionCode": 23,
-  "versionName": "1.0.22",
-  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.22",
-  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.22/metronome-1.0.22.apk",
-  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.22/metronome-1.0.22.apk.sha256",
+  "versionCode": 24,
+  "versionName": "1.0.23",
+  "releaseUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/tag/metronome-v1.0.23",
+  "apkUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.23/metronome-1.0.23.apk",
+  "checksumUrl": "https://gitee.com/jackyyu/personal-mobile-apps/releases/download/metronome-v1.0.23/metronome-1.0.23.apk.sha256",
   "notes": [
-    "意大利速度术语统一采用 Wittner 官方参考表，并在界面显示参考范围。",
-    "点击速度术语会跳转到对应档位的代表 BPM；超出 40–208 时不再强行套用术语。"
+    "拍速术语改为教材表中的 13 档范围；Moderato（中板）为 88–104 BPM，点击跳到 96 BPM。",
+    "点击各档位会跳到范围中心附近的机械刻度；档位间隔 BPM 不再强行套用术语。"
   ]
 }

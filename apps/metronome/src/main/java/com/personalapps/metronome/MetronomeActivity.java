@@ -70,18 +70,23 @@ public final class MetronomeActivity extends Activity {
     private static final int[] SIGNATURE_BEATS = {
             2, 2, 3, 4, 3, 6, 12
     };
-    // Source: Wittner System Maelzel manual. Its adjacent reference ranges share
-    // endpoints; the UI assigns each shared endpoint to the following marking.
-    // targetBpm is a product preset chosen from the traditional pendulum scale.
+    // Source: the photographed Chinese music terminology table supplied for this app.
+    // Ranges stay exact, including the intentional gaps between terminology bands.
+    // targetBpm is the midpoint or nearest traditional mechanical-metronome scale mark.
     private static final TempoMarking[] TEMPO_MARKINGS = {
-            new TempoMarking(40, 60, 50, "Largo", "广板"),
-            new TempoMarking(60, 66, 63, "Larghetto", "小广板"),
-            new TempoMarking(66, 76, 72, "Adagio", "柔板"),
-            new TempoMarking(76, 108, 92, "Andante", "行板"),
-            new TempoMarking(108, 120, 112, "Moderato", "中板"),
-            new TempoMarking(120, 168, 144, "Allegro", "快板"),
-            new TempoMarking(168, 200, 184, "Presto", "急板"),
-            new TempoMarking(200, 208, 208, "Prestissimo", "最急板")
+            new TempoMarking(40, 44, 42, "Grave", "庄板"),
+            new TempoMarking(46, 50, 48, "Largo", "广板"),
+            new TempoMarking(52, 54, 52, "Lento", "慢板"),
+            new TempoMarking(56, 58, 56, "Adagio", "柔板"),
+            new TempoMarking(60, 63, 60, "Larghetto", "小广板"),
+            new TempoMarking(66, 66, 66, "Andante", "行板"),
+            new TempoMarking(69, 84, 76, "Andantino", "小行板"),
+            new TempoMarking(88, 104, 96, "Moderato", "中板"),
+            new TempoMarking(108, 126, 116, "Allegretto", "小快板"),
+            new TempoMarking(132, 152, 144, "Allegro", "快板"),
+            new TempoMarking(160, 176, 168, "Vivace", "活板"),
+            new TempoMarking(184, 220, 200, "Presto", "急板"),
+            new TempoMarking(228, 228, 228, "Prestissimo", "最急板")
     };
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -464,8 +469,7 @@ public final class MetronomeActivity extends Activity {
     }
 
     private void cycleTempoMarking() {
-        int currentIndex = tempoMarkingIndexFor(bpm);
-        int nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % TEMPO_MARKINGS.length;
+        int nextIndex = nextTempoMarkingIndexFor(bpm);
         setTempoBpm(TEMPO_MARKINGS[nextIndex].targetBpm);
     }
 
@@ -748,7 +752,13 @@ public final class MetronomeActivity extends Activity {
         if (index >= 0) {
             return TEMPO_MARKINGS[index].label();
         }
-        return value < TEMPO_MARKINGS[0].minBpm ? "低于常用术语范围" : "高于常用术语范围";
+        if (value < TEMPO_MARKINGS[0].minBpm) {
+            return "低于教材术语范围";
+        }
+        if (value > TEMPO_MARKINGS[TEMPO_MARKINGS.length - 1].maxBpm) {
+            return "高于教材术语范围";
+        }
+        return "术语档位间隔";
     }
 
     private String tempoRangeFor(int value) {
@@ -756,9 +766,13 @@ public final class MetronomeActivity extends Activity {
         if (index >= 0) {
             return TEMPO_MARKINGS[index].rangeLabel();
         }
-        return value < TEMPO_MARKINGS[0].minBpm
-                ? "Wittner 参考从 40 BPM 起"
-                : "Wittner 参考到 208 BPM 止";
+        if (value < TEMPO_MARKINGS[0].minBpm) {
+            return "教材参考从 40 BPM 起";
+        }
+        if (value > TEMPO_MARKINGS[TEMPO_MARKINGS.length - 1].maxBpm) {
+            return "教材参考到 228 BPM 止";
+        }
+        return "该 BPM 未落在教材术语范围";
     }
 
     private String tempoMarkingDescriptionFor(int value) {
@@ -767,21 +781,33 @@ public final class MetronomeActivity extends Activity {
             TempoMarking marking = TEMPO_MARKINGS[index];
             return marking.label() + "，" + marking.rangeLabel() + "，点击切换下一档";
         }
-        return tempoMarkingFor(value) + "，点击从广板开始切换";
+        TempoMarking next = TEMPO_MARKINGS[nextTempoMarkingIndexFor(value)];
+        return tempoMarkingFor(value) + "，点击切换到" + next.label();
     }
 
     private int tempoMarkingIndexFor(int value) {
         int normalizedBpm = clampBpm(value);
         for (int index = 0; index < TEMPO_MARKINGS.length; index++) {
             TempoMarking marking = TEMPO_MARKINGS[index];
-            int nextMinBpm = index + 1 < TEMPO_MARKINGS.length
-                    ? TEMPO_MARKINGS[index + 1].minBpm
-                    : marking.maxBpm + 1;
-            if (normalizedBpm >= marking.minBpm && normalizedBpm < nextMinBpm) {
+            if (normalizedBpm >= marking.minBpm && normalizedBpm <= marking.maxBpm) {
                 return index;
             }
         }
         return -1;
+    }
+
+    private int nextTempoMarkingIndexFor(int value) {
+        int currentIndex = tempoMarkingIndexFor(value);
+        if (currentIndex >= 0) {
+            return (currentIndex + 1) % TEMPO_MARKINGS.length;
+        }
+        int normalizedBpm = clampBpm(value);
+        for (int index = 0; index < TEMPO_MARKINGS.length; index++) {
+            if (normalizedBpm < TEMPO_MARKINGS[index].minBpm) {
+                return index;
+            }
+        }
+        return 0;
     }
 
     private int clampBpm(int value) {
@@ -1018,7 +1044,10 @@ public final class MetronomeActivity extends Activity {
         }
 
         private String rangeLabel() {
-            return "Wittner 参考范围 " + minBpm + "–" + maxBpm + " BPM";
+            if (minBpm == maxBpm) {
+                return "教材参考 " + minBpm + " BPM";
+            }
+            return "教材参考范围 " + minBpm + "–" + maxBpm + " BPM";
         }
     }
 

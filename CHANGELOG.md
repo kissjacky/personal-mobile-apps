@@ -1,5 +1,11 @@
 # Changelog
 
+## metronome 1.0.23
+
+- Replaced the tempo markings with the 13 ranges in the supplied Chinese music terminology table, from Grave 40–44 through Prestissimo 228.
+- Made each marking tap jump to a central traditional mechanical-metronome scale value; Moderato 88–104 now targets 96 BPM.
+- Kept BPM gaps between the documented ranges unlabeled and made tapping a gap advance to the next marking.
+
 ## metronome 1.0.22
 
 - Aligned Italian tempo labels and ranges with the Wittner reference table, and made each tap target consistent with its displayed range.
